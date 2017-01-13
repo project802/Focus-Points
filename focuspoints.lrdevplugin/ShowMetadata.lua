@@ -80,8 +80,8 @@ function splitForColumns(metaData)
     local l = parts[k].key
     
     local v = parts[k].value
-    if (l == nill) then l = "" end
-    if (v == nill) then v = "" end
+    if l == nil then l = "" end
+    if v == nil then v = "" end
     l = LrStringUtils.trimWhitespace(l)
     v = LrStringUtils.trimWhitespace(v)
     
@@ -89,8 +89,8 @@ function splitForColumns(metaData)
     maxValuesLength = math.max(maxValuesLength, string.len(v))
     numOfLines = numOfLines + 1
     
-    --log("l: " .. l)
-    --log("v: " .. v)
+    --logDebug("ShowMetadata", "l: " .. l)
+    --logDebug("ShowMetadata", "v: " .. v)
     
     labels = labels .. l .. "\r"
     values = values .. v .. "\r"
@@ -103,9 +103,9 @@ function createParts(metaData)
   local parts = {}
   local num = 1;
   for i in string.gmatch(metaData, "[^\\\n]+") do 
-    log("i = " .. i)
+    logDebug("ShowMetadata", "i = " .. i)
     p = stringToKeyValue(i, ":")
-    if (p ~= nill) then
+    if p ~= nil then
       parts[num] = p
       num = num+1
     end

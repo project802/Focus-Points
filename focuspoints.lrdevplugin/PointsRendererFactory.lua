@@ -42,8 +42,8 @@ function PointsRendererFactory.createRenderer(photo)
   cameraMake = string.lower(cameraMake)
   cameraModel = string.lower(cameraModel)
   
-  log ("cameraMake: " .. cameraMake)
-  log ("cameraModel: " .. cameraModel)
+  logInfo("PointsRenderFactory", "Camera Make: " .. cameraMake)
+  logInfo("PointsRenderFactory", "Camera Model: " .. cameraModel)
   
   -- some cameras have the same mapping as other camera
   -- check the cameraModel and switch it to a known map if it's a duplicate
@@ -70,14 +70,12 @@ function PointsRendererFactory.createRenderer(photo)
     DefaultDelegates.focusPointsMap = nil     -- unused
     DefaultDelegates.focusPointDimen = nil    -- unused
     DefaultPointRenderer.funcGetAfPoints = PanasonicDelegates.getAfPoints
-   else
+  else
     local pointsMap, pointDimen = PointsRendererFactory.getFocusPoints(photo, cameraMake, cameraModel)
     DefaultDelegates.focusPointsMap = pointsMap
     DefaultDelegates.focusPointDimen = pointDimen
     DefaultPointRenderer.funcGetAfPoints = DefaultDelegates.getAfPoints
   end
-
-  DefaultPointRenderer.funcGetShotOrientation = DefaultDelegates.getShotOrientation
 
   return DefaultPointRenderer
 end
