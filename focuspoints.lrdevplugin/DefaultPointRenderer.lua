@@ -1,5 +1,5 @@
 --[[
-  Copyright 2016 Joshua Musselwhite, Whizzbang Inc
+  Copyright 2016 Whizzbang Inc
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ local LrDialogs = import 'LrDialogs'
 local LrView = import 'LrView'
 local LrColor = import 'LrColor'
 local LrErrors = import 'LrErrors'
+local LrApplication = import 'LrApplication'
 
 require "ExifUtils"
 a = require "affine"
@@ -201,17 +202,18 @@ end
 --]]
 function DefaultPointRenderer.createPointView(x, y, rotation, horizontalMirroring, iconFileTemplate, anchorX, anchorY, angleStep)
   local fileRotationStr = ""
-  local fileMirroringStr = ""
 
   if angleStep ~= nil and angleStep ~= 0 then
-    fileRotationStr = (angleStep * math.floor(0.5 + (rotation % 360) / angleStep)) % 360
+    local closestAngle = (angleStep * math.floor(0.5 + rotation / angleStep)) % 360
+    if horizontalMirroring == -1 then
+        fileRotationStr = (630 - closestAngle) % 360
+    else
+        fileRotationStr = closestAngle
+    end
   end
 
-  if horizontalMirroring == -1 then
-    fileMirroringStr = "-mirrored"
-  end
-
-  local fileName = string.format(iconFileTemplate, fileRotationStr .. fileMirroringStr)
+  local fileName = string.format(iconFileTemplate, fileRotationStr)
+  logDebug("createPointView", "fileName: " .. fileName)
 
   local viewFactory = LrView.osFactory()
 
@@ -261,6 +263,12 @@ end
 -- - horizontal mirroring (0 -> none, -1 -> yes)
 --]]
 function DefaultPointRenderer.getUserRotationAndMirroring(photo)
+  -- LR 5 throws an error even trying to access getRawMetadata("orientation")
+  logDebug("DefaultPointRenderer", "LR version: " .. LrApplication.versionTable().major)
+  if (LrApplication.versionTable().major < 6) then
+    return DefaultPointRenderer.getShotOrientation(photo, ExifUtils.readMetaDataAsTable(photo)), 0
+  end
+
   local userRotation = photo:getRawMetadata("orientation")
   if userRotation == nil then
     logWarn("DefaultPointRenderer", "userRotation = nil, which is unexpected starting with LR6")

@@ -1,5 +1,5 @@
 --[[
-  Copyright 2016 Joshua Musselwhite, Whizzbang Inc
+  Copyright 2016 Whizzbang Inc
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -35,40 +35,40 @@ DefaultDelegates.POINTTYPE_AF_INACTIVE = "af_inactive"                    -- The
 DefaultDelegates.POINTTYPE_FACE = "face"                                  -- A face has been detected
 DefaultDelegates.pointTemplates = {
   af_selected_infocus = {
-    center = { fileTemplate = "assets/imgs/focus_point_red-fat_center_%s.png", anchorX = 23, anchorY = 23 },
-    center_small = { fileTemplate = "assets/imgs/focus_point_red_center_%s.png", anchorX = 23, anchorY = 23 },
-    corner = { fileTemplate = "assets/imgs/focus_point_red-fat_corner_%s.png", anchorX = 23, anchorY = 23 },
-    corner_small = { fileTemplate = "assets/imgs/focus_point_red-fat_corner-small_%s.png", anchorX = 23, anchorY = 23 },
+    center = { fileTemplate = "assets/imgs/center/red/normal.png", anchorX = 23, anchorY = 23 },
+    center_small = { fileTemplate = "assets/imgs/center/red/small.png", anchorX = 23, anchorY = 23 },
+    corner = { fileTemplate = "assets/imgs/corner/red/normal_fat_%s.png", anchorX = 23, anchorY = 23 },
+    corner_small = { fileTemplate = "assets/imgs/corner/red/small_fat_%s.png", anchorX = 23, anchorY = 23 },
     bigToSmallTriggerDist = 100,
     minCornerDist = 10,
     angleStep = 5
   },
   af_infocus = {
-    center = { fileTemplate = "assets/imgs/focus_point_red-fat_center_%s.png", anchorX = 23, anchorY = 23 },
-    center_small = { fileTemplate = "assets/imgs/focus_point_red_center_%s.png", anchorX = 23, anchorY = 23 },
-    corner = { fileTemplate = "assets/imgs/focus_point_black_corner_%s.png", anchorX = 23, anchorY = 23 },
-    corner_small = { fileTemplate = "assets/imgs/focus_point_black_corner-small_%s.png", anchorX = 23, anchorY = 23 },
+    center = { fileTemplate = "assets/imgs/center/red/normal.png", anchorX = 23, anchorY = 23 },
+    center_small = { fileTemplate = "assets/imgs/center/red/small.png", anchorX = 23, anchorY = 23 },
+    corner = { fileTemplate = "assets/imgs/corner/black/normal_%s.png", anchorX = 23, anchorY = 23 },
+    corner_small = { fileTemplate = "assets/imgs/corner/black/small_%s.png", anchorX = 23, anchorY = 23 },
     bigToSmallTriggerDist = 100,
     minCornerDist = 10,
     angleStep = 5
   },
   af_selected = {
-    corner = { fileTemplate = "assets/imgs/focus_point_red_corner_%s.png", anchorX = 23, anchorY = 23 },
-    corner_small = { fileTemplate = "assets/imgs/focus_point_red_corner-small_%s.png", anchorX = 23, anchorY = 23 },
+    corner = { fileTemplate = "assets/imgs/corner/red/normal_%s.png", anchorX = 23, anchorY = 23 },
+    corner_small = { fileTemplate = "assets/imgs/corner/red/small_%s.png", anchorX = 23, anchorY = 23 },
     bigToSmallTriggerDist = 100,
     minCornerDist = 10,
     angleStep = 5
   },
   af_inactive = {
-    corner = { fileTemplate = "assets/imgs/focus_point_black_corner_%s.png", anchorX = 23, anchorY = 23 },
-    corner_small = { fileTemplate = "assets/imgs/focus_point_black_corner-small_%s.png", anchorX = 23, anchorY = 23 },
+    corner = { fileTemplate = "assets/imgs/corner/grey/normal_%s.png", anchorX = 23, anchorY = 23 },
+    corner_small = { fileTemplate = "assets/imgs/corner/grey/small_%s.png", anchorX = 23, anchorY = 23 },
     bigToSmallTriggerDist = 100,
     minCornerDist = 10,
     angleStep = 5
   },
   face = {
-    corner = { fileTemplate = "assets/imgs/focus_point_yellow_corner_%s.png", anchorX = 23, anchorY = 23 },
-    corner_small = { fileTemplate = "assets/imgs/focus_point_yellow_corner-small_%s.png", anchorX = 23, anchorY = 23 },
+    corner = { fileTemplate = "assets/imgs/corner/yellow/normal_%s.png", anchorX = 23, anchorY = 23 },
+    corner_small = { fileTemplate = "assets/imgs/corner/yellow/small_%s.png", anchorX = 23, anchorY = 23 },
     bigToSmallTriggerDist = 100,
     minCornerDist = 10,
     angleStep = 5
@@ -81,57 +81,82 @@ DefaultDelegates.pointTemplates = {
 --]]
 function DefaultDelegates.getAfPoints(photo, metaData)
   local focusPoint = ExifUtils.findFirstMatchingValue(metaData, DefaultDelegates.metaKeyAfPointUsed) 
-  local afPointType = nil
-  if (focusPoint ~= nil) then
-    afPointType = DefaultDelegates.POINTTYPE_AF_SELECTED_INFOCUS
-  else 
-    focusPoint = ExifUtils.findFirstMatchingValue(metaData, DefaultDelegates.metaKeyAfPointSelected)
-    if (focusPoint ~= nil) then
-      afPointType = DefaultDelegates.POINTTYPE_AF_SELECTED
-    end
-  end
+  local focusPointsTable = split(focusPoint, ",")
   
-  -- if we still haven't found a focus point, try getting it from the liveview mode
-  if (focusPoint == nil) then
-    local liveViewResult = DefaultDelegates.getLiveViewAfPoints(photo, metaData)
-    if (liveViewResult == nil) then
+  local selectedPoint = ExifUtils.findFirstMatchingValue(metaData, DefaultDelegates.metaKeyAfPointSelected)
+  local selectedPointsTable = split(selectedPoint, ",")
+  
+  -- if we dont have any focus points, check for liveview modes.
+  if (focusPoint == nil and selectedPoint == nil) then
+    local liveViewResults = DefaultDelegates.getLiveViewAfPoints(photo, metaData)
+    if (liveViewResults == nil) then
       -- give up. can't find focus point information
       LrErrors.throwUserError("Could not find Auto Focus data within the file.")
       return nil
     else 
-      return liveViewResult
+      return liveViewResults
     end
   end
   
-  -- typical AF points have been found
-  local result = nil
-  focusPoint = DefaultDelegates.normalizeFocusPointName(focusPoint)
-  if DefaultDelegates.focusPointsMap[focusPoint] == nil then
-    LrErrors.throwUserError("The AF-Point " .. focusPoint .. " could not be found within the file.")
-    return nil
+  -- fail out if no focus points found
+  if (focusPoint == nil and selectedPoint == nil) then
+    -- give up. can't find focus point information
+      LrErrors.throwUserError("Could not find Auto Focus data within the file.")
+      return nil
   end
-
-  -- TODO: The addition of the dimension should be removed once all config files have been
-  -- updated to reflect the center of the focus points
-  local x = DefaultDelegates.focusPointsMap[focusPoint][1] + (.5 * DefaultDelegates.focusPointDimen[1])
-  local y = DefaultDelegates.focusPointsMap[focusPoint][2] + (.5 * DefaultDelegates.focusPointDimen[2])
-
-  result = {
+  
+  local result = {
     pointTemplates = DefaultDelegates.pointTemplates,
     points = {
-      {
-        pointType = afPointType,
-        x = x,
-        y = y,
-        width = DefaultDelegates.focusPointDimen[1],
-        height = DefaultDelegates.focusPointDimen[2]
-      }
     }
   }
+  
+  -- add the infocus points
+  if (focusPointsTable ~= nil) then 
+    DefaultDelegates.addFocusPointsToResult(result, DefaultDelegates.POINTTYPE_AF_SELECTED_INFOCUS, focusPointsTable)
+  end 
+  
+  -- add the selected points
+  if (selectedPointsTable ~= nil) then 
+    DefaultDelegates.addFocusPointsToResult(result, DefaultDelegates.POINTTYPE_AF_SELECTED, selectedPointsTable)
+  end 
+  
   return result
+  
 end
 
 --[[
+  @private
+  Method to loop over the extracted focus point table and add it to the result table which will be returned by this delegate
+  @result - the result table 
+  @focusPointType - the type of focus point it is. Values such as DefaultDelegates.POINTTYPE_AF_SELECTED_INFOCUS
+  @focusPointTable - the table of the focus points to add to the result
+--]]
+function DefaultDelegates.addFocusPointsToResult(result, focusPointType, focusPointTable)
+  if (focusPointTable ~= nil) then 
+    for key,value in pairs(focusPointTable) do
+      local focusPointName = DefaultDelegates.normalizeFocusPointName(value)
+      if DefaultDelegates.focusPointsMap[focusPointName] == nil then
+        LrErrors.throwUserError("The AF-Point " .. focusPointName .. " could not be found within the file.")
+        return nil
+      end
+      
+      local x = DefaultDelegates.focusPointsMap[focusPointName][1] + (.5 * DefaultDelegates.focusPointDimen[1])
+      local y = DefaultDelegates.focusPointsMap[focusPointName][2] + (.5 * DefaultDelegates.focusPointDimen[2])
+      
+      table.insert(result.points, {
+          pointType = focusPointType,
+          x = x,
+          y = y,
+          width = DefaultDelegates.focusPointDimen[1],
+          height = DefaultDelegates.focusPointDimen[2]
+        })
+    end
+  end
+end
+
+--[[
+  @private
   Function to get the autofocus points and focus size of the camera when shot in liveview mode
   returns typical points table
 --]]
@@ -171,6 +196,7 @@ function DefaultDelegates.getLiveViewAfPoints(photo, metaData)
 end
 
 --[[
+  @private
   At random times, Nikon adds the word "(Center") to it's focus points. Strip all of this 
   out. (Shame on you Nikon)
   @focusPoint - the focus point such as C6 or B1 or E2

@@ -1,5 +1,5 @@
 --[[
-  Copyright 2016 Joshua Musselwhite, Whizzbang Inc
+  Copyright 2016 Whizzbang Inc
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -26,3 +26,6 @@ NikonDuplicates["nikon d7100"] = "nikon d7200"
 
 NikonDuplicates["nikon d800e"] = "nikon d800"
 NikonDuplicates["nikon d810"] = "nikon d800"
+
+NikonDuplicates["nikon d5300"] = "nikon d5500"
+NikonDuplicates["nikon d5200"] = "nikon d5500"
